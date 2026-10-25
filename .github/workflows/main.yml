@@ -11,6 +11,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -19,9 +24,12 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Verify Folder Structure & Pure SVG Icon
+      - name: Prepare Clean Config & Folder Structure
         shell: pwsh
         run: |
+          $utf8 = New-Object System.Text.UTF8Encoding($false)
+
+          # 1. Pure geometric SVG icon
           $svg = @'
           <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
             <rect width="512" height="512" rx="115" fill="#08130E"/>
@@ -29,9 +37,57 @@ jobs:
             <circle cx="256" cy="256" r="68" fill="#6DD3A1"/>
           </svg>
           '@
-          $utf8 = New-Object System.Text.UTF8Encoding($false)
           [System.IO.File]::WriteAllText("$PWD/app-icon.svg", $svg, $utf8)
 
+          # 2. Clean package.json without @preact/preset-vite peer conflict
+          $pkg = @'
+          {
+            "name": "rdoro",
+            "private": true,
+            "version": "1.0.0",
+            "type": "module",
+            "scripts": {
+              "dev": "vite",
+              "build": "vite build",
+              "tauri": "tauri"
+            },
+            "dependencies": {
+              "@tauri-apps/api": "^2.1.0",
+              "@tauri-apps/plugin-autostart": "^2.0.1",
+              "@tauri-apps/plugin-global-shortcut": "^2.0.1",
+              "@tauri-apps/plugin-notification": "^2.0.1",
+              "@tauri-apps/plugin-window-state": "^2.0.1",
+              "preact": "^10.24.3"
+            },
+            "devDependencies": {
+              "@tauri-apps/cli": "^2.1.0",
+              "typescript": "^5.6.3",
+              "vite": "^5.4.10"
+            }
+          }
+          '@
+          [System.IO.File]::WriteAllText("$PWD/package.json", $pkg, $utf8)
+
+          # 3. Native esbuild Preact JSX in vite.config.ts (zero external plugin needed)
+          $vite = @'
+          import { defineConfig } from "vite";
+
+          export default defineConfig({
+            esbuild: {
+              jsx: "automatic",
+              jsxImportSource: "preact"
+            },
+            clearScreen: false,
+            build: {
+              target: "esnext",
+              minify: "esbuild",
+              sourcemap: false
+            }
+          });
+          '@
+          [System.IO.File]::WriteAllText("$PWD/vite.config.ts", $vite, $utf8)
+
+          # 4. Ensure subfolder layout
           New-Item -ItemType Directory -Force -Path "src/components" | Out-Null
           New-Item -ItemType Directory -Force -Path "src-tauri/src" | Out-Null
           New-Item -ItemType Directory -Force -Path "src-tauri/capabilities" | Out-Null
@@ -48,16 +104,14 @@ jobs:
             Move-Item "src-tauri/default.json" "src-tauri/capabilities/default.json"
           }
 
-      - name: Install Frontend Dependencies cleanly
-        run: |
-          npm cache clean --force
-          npm install
+      - name: Install Dependencies with pnpm
+        run: pnpm install --no-frozen-lockfile
 
       - name: Generate App Icons
-        run: npx @tauri-apps/cli icon app-icon.svg
+        run: pnpm tauri icon app-icon.svg
 
       - name: Build RDORO Installer
-        run: npm run tauri build
+        run: pnpm tauri build
 
       - name: Upload Windows Installer (.exe and .msi)
         uses: actions/upload-artifact@v4
