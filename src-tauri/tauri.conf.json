@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "RDORO",
+  "version": "1.0.0",
+  "identifier": "com.rdoro.desktop",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "RDORO",
+        "width": 460,
+        "height": 780,
+        "minWidth": 380,
+        "minHeight": 640,
+        "resizable": true,
+        "maximizable": false,
+        "decorations": false,
+        "transparent": false,
+        "backgroundColor": "#08130E",
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; media-src 'self' blob: data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": [
+      "icons/icon.ico"
+    ]
+  }
+}
