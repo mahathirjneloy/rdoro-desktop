@@ -26,9 +26,9 @@ RDORO is a lightweight, offline Pomodoro timer and study tracker for Windows 10 
 
 ## Installation
 
-1. Go to the **Actions** tab in this repository and select the latest successful **Build RDORO Windows Installer** workflow run.
-2. Scroll down to **Artifacts** and download **`RDORO-Windows-Installer`**.
-3. Extract the `.zip` archive and run **`RDORO_1.0.0_x64-setup.exe`** (or the `.msi` installer).
+1. Go to the [**Latest Release (v1.0.0)**](https://github.com/mahathirjneloy/rdoro-desktop/releases/latest) page.
+2. Download **`RDORO_1.0.0_x64-setup.exe`** (1.75 MB) or **`RDORO_1.0.0_x64_en-US.msi`** (2.39 MB).
+3. Run the installer to launch RDORO.
 
 ## Building from Source
 
